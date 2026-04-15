@@ -81,7 +81,7 @@
             border-radius: 2px;
         }
 
-        /* Vitrine Pública (Adaptada do Layout Elite) */
+        /* Vitrine Pública */
         .filters { display: flex; gap: 15px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center; }
         .filters input, .filters select { 
             flex: 1; min-width: 200px; max-width: 300px; padding: 12px 20px; 
@@ -135,7 +135,7 @@
         }
         .buy-btn:hover { background: #ffed4e; transform: scale(1.05); box-shadow: 0 10px 25px rgba(255, 215, 0, 0.4); }
 
-        /* Painel Admin (Adaptado para Dark Mode) */
+        /* Painel Admin */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .dash-card { 
             background: linear-gradient(135deg, #1a1a1a, #222); 
@@ -164,6 +164,23 @@
         .btn-secondary { background: #333; color: #fff; }
         .btn-secondary:hover { background: #444; }
         .btn-danger { background: #8a1c1c; color: #fff; padding: 8px 15px; font-size: 0.85rem; border-radius: 4px; }
+
+        /* Upload de Imagens Personalizado */
+        .file-upload-input { display: none; }
+        .file-upload-btn {
+            display: block; background: #0f0f0f; color: #ffd700;
+            border: 2px dashed #ffd700; padding: 20px; text-align: center;
+            border-radius: 8px; cursor: pointer; font-weight: bold;
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .file-upload-btn:hover { background: rgba(255, 215, 0, 0.1); transform: scale(1.02); }
+        #image-preview-container {
+            display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px;
+        }
+        .preview-img {
+            width: 80px; height: 80px; object-fit: cover;
+            border-radius: 6px; border: 2px solid #444; flex-shrink: 0;
+        }
 
         /* Tabelas Dark */
         .table-responsive { overflow-x: auto; background: #1a1a1a; border-radius: 12px; border: 1px solid #333; padding: 20px;}
@@ -218,9 +235,9 @@
             </div>
         </div>
 
-        <div style="display: flex; gap: 15px; margin-bottom: 30px; justify-content: center;">
+        <div style="display: flex; gap: 15px; margin-bottom: 30px; justify-content: center; flex-wrap: wrap;">
             <button class="btn-admin btn-primary" onclick="document.getElementById('formAddCar').style.display='block'">+ Cadastrar Veículo</button>
-            <button class="btn-admin btn-secondary" onclick="navigate('config')">Configurações da Loja</button>
+            <button class="btn-admin btn-secondary" onclick="navigate('config')" style="border: 1px solid #ffd700;">✏️ Editar Nome no Topo e Contato</button>
         </div>
 
         <div id="formAddCar" class="admin-form-container" style="display: none;">
@@ -252,10 +269,17 @@
                     <label>Diferenciais (Descrição)</label>
                     <textarea id="c_desc" class="form-control" maxlength="300" placeholder="Histórico de revisões, pacotes opcionais..."></textarea>
                 </div>
+                
                 <div class="form-group">
-                    <label>Links das Imagens (Separados por vírgula)</label>
-                    <textarea id="c_fotos" class="form-control" required placeholder="https://link-foto1.jpg, https://link-foto2.jpg"></textarea>
+                    <label>Fotos do Veículo (Selecione múltiplas imagens)</label>
+                    <div>
+                        <input type="file" id="c_fotos_upload" accept="image/*" multiple class="file-upload-input" onchange="processarImagens(event)">
+                        <label for="c_fotos_upload" class="file-upload-btn">📸 Clique para Escolher Imagens</label>
+                    </div>
+                    <div id="image-preview-container"></div>
+                    <small style="color: #aaa; margin-top: 5px; display: block;">As fotos serão redimensionadas automaticamente para a proporção perfeita.</small>
                 </div>
+
                 <div style="display: flex; gap: 15px;">
                     <button type="submit" class="btn-admin btn-primary">Salvar no Acervo</button>
                     <button type="button" class="btn-admin btn-secondary" onclick="document.getElementById('formAddCar').style.display='none'">Cancelar</button>
@@ -283,24 +307,61 @@
         <div class="admin-form-container" style="max-width: 600px; margin: 0 auto;">
             <h2 class="section-title" style="font-size: 2rem;">Ajustes da Marca</h2>
             <form onsubmit="salvarConfig(event)">
+                
                 <div class="form-group">
-                    <label>Nome da Concessionária</label>
-                    <input type="text" id="conf_nome" class="form-control" required>
+                    <label>Nome Principal no Topo (Cor Branca)</label>
+                    <input type="text" id="conf_nome" class="form-control" placeholder="Ex: AutoPremium" required>
                 </div>
                 <div class="form-group">
-                    <label>WhatsApp Comercial (DDD + Número)</label>
-                    <input type="text" id="conf_whats" class="form-control" required>
+                    <label>Palavra Destaque no Topo (Cor Dourada)</label>
+                    <input type="text" id="conf_sufixo" class="form-control" placeholder="Ex: SaaS ou Motors">
                 </div>
-                <button type="submit" class="btn-admin btn-primary" style="width: 100%;">Atualizar Informações</button>
+
+                <div class="form-group" style="margin-top: 30px;">
+                    <label>WhatsApp Comercial (Recebimento de Leads)</label>
+                    <input type="text" id="conf_whats" class="form-control" placeholder="Ex: 5511999999999" required>
+                </div>
+                <button type="submit" class="btn-admin btn-primary" style="width: 100%;">Atualizar Sistema</button>
             </form>
         </div>
     </main>
 
     <script>
+        // Dados do App atualizados para suportar o sufixo dourado
         let appData = JSON.parse(localStorage.getItem('autoPremiumData')) || {
-            config: { nomeLoja: "Motors Premium", whatsapp: "5511900000000" },
+            config: { nomeLoja: "Motors Premium", sufixoLoja: "SaaS", whatsapp: "5511900000000" },
             carros: [], totalLeads: 0
         };
+
+        // --- SISTEMA DE UPLOAD BASE64 (Múltiplas Fotos) ---
+        let fotosTemporarias = [];
+
+        function processarImagens(event) {
+            const files = event.target.files;
+            const previewContainer = document.getElementById('image-preview-container');
+            previewContainer.innerHTML = ''; // Limpa anteriores
+            fotosTemporarias = []; // Reseta o array
+
+            if(files.length === 0) return;
+
+            for(let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const base64Str = e.target.result;
+                    fotosTemporarias.push(base64Str);
+
+                    // Cria a miniatura
+                    const img = document.createElement('img');
+                    img.src = base64Str;
+                    img.className = 'preview-img';
+                    previewContainer.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        // ----------------------------------------------------
 
         function saveData() {
             localStorage.setItem('autoPremiumData', JSON.stringify(appData));
@@ -315,13 +376,15 @@
         }
 
         function preencherFormConfig() {
-            document.getElementById('conf_nome').value = appData.config.nomeLoja;
-            document.getElementById('conf_whats').value = appData.config.whatsapp;
+            document.getElementById('conf_nome').value = appData.config.nomeLoja || "";
+            document.getElementById('conf_sufixo').value = appData.config.sufixoLoja || "";
+            document.getElementById('conf_whats').value = appData.config.whatsapp || "";
         }
 
         function salvarConfig(e) {
             e.preventDefault();
             appData.config.nomeLoja = document.getElementById('conf_nome').value;
+            appData.config.sufixoLoja = document.getElementById('conf_sufixo').value;
             appData.config.whatsapp = document.getElementById('conf_whats').value;
             saveData();
             navigate('admin');
@@ -329,8 +392,11 @@
 
         function salvarCarro(e) {
             e.preventDefault();
-            const fotosRaw = document.getElementById('c_fotos').value.split(',');
-            const fotosArray = fotosRaw.map(url => url.trim()).filter(url => url !== "");
+
+            // Pega as fotos do array temporário, se vazio, usa uma imagem padrão
+            const fotosArray = fotosTemporarias.length > 0 
+                ? [...fotosTemporarias] 
+                : ["https://via.placeholder.com/600x400/1a1a1a/ffd700?text=Sem+Foto"];
 
             const novoCarro = {
                 id: Date.now(),
@@ -340,13 +406,18 @@
                 km: document.getElementById('c_km').value,
                 cor: document.getElementById('c_cor').value,
                 desc: document.getElementById('c_desc').value,
-                fotos: fotosArray.length > 0 ? fotosArray : ["https://via.placeholder.com/600x400/1a1a1a/ffd700?text=Sem+Foto"],
+                fotos: fotosArray, // Salva as imagens Base64
                 status: 'ativo', leads: 0
             };
 
             appData.carros.push(novoCarro);
             saveData();
+            
+            // Limpa o form e o container de imagens
             document.getElementById('carForm').reset();
+            document.getElementById('image-preview-container').innerHTML = '';
+            fotosTemporarias = [];
+            
             document.getElementById('formAddCar').style.display = 'none';
         }
 
@@ -372,10 +443,16 @@
         }
 
         function atualizarInterface() {
-            document.getElementById('brandName').innerHTML = `${appData.config.nomeLoja} <span>SaaS</span>`;
+            // Atualiza o Nome no Header com as duas cores
+            const nomeStr = appData.config.nomeLoja || "AutoPremium";
+            const sufixoStr = appData.config.sufixoLoja ? `<span>${appData.config.sufixoLoja}</span>` : "";
+            document.getElementById('brandName').innerHTML = `${nomeStr} ${sufixoStr}`;
+            
             document.getElementById('totalLeadsCount').innerText = appData.totalLeads;
             document.getElementById('activeCarsCount').innerText = appData.carros.filter(c => c.status === 'ativo').length;
-            renderAdminTable(); renderVitrine();
+            
+            renderAdminTable(); 
+            renderVitrine();
         }
 
         function renderAdminTable() {
@@ -443,7 +520,7 @@
             });
         }
 
-        // Adiciona dados de teste se vazio
+        // Adiciona dados de teste apenas se a lista estiver completamente vazia (primeiro uso)
         if(appData.carros.length === 0) {
             appData.carros.push({
                 id: 1, nome: "Land Rover Evoque HSE", ano: 2022, preco: 345000, km: 22000, cor: "Preto",
