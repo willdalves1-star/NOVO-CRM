@@ -1,127 +1,450 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WA CRM - Azul Moderno</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoVitrine SaaS - Gerador de Leads</title>
+    <style>
+        /* =========================================
+           CSS - SISTEMA DE DESIGN MINIMALISTA
+           ========================================= */
+        :root {
+            --primary: #0056b3;
+            --success: #25D366;
+            --dark: #1a1a1a;
+            --light: #f4f7f6;
+            --gray: #e0e0e0;
+            --text: #333;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--light); color: var(--text); }
+        
+        /* Navegação */
+        header { background-color: var(--dark); color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        header h1 { font-size: 1.2rem; }
+        header span { color: var(--primary); }
+        .nav-btns button { background: transparent; color: #fff; border: 1px solid #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 10px; font-size: 0.9rem; }
+        .nav-btns button:hover { background: #fff; color: var(--dark); }
+
+        /* Estrutura de Telas (SPA) */
+        .view { display: none; padding: 20px; max-width: 1000px; margin: 0 auto; }
+        .view.active { display: block; }
+        .section-title { margin-bottom: 20px; font-size: 1.5rem; border-bottom: 2px solid var(--gray); padding-bottom: 10px; }
+
+        /* Painel Admin & Dashboard */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .dash-card { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: center; }
+        .dash-card h3 { color: #666; font-size: 1rem; margin-bottom: 10px; }
+        .dash-card p { font-size: 2rem; font-weight: bold; color: var(--primary); }
+
+        /* Formulários */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+        textarea.form-control { resize: vertical; min-height: 80px; }
+        
+        .btn { display: inline-block; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; text-align: center; width: 100%; font-size: 1rem; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-danger { background: #dc3545; color: #fff; width: auto; padding: 6px 12px; font-size: 0.8rem; }
+
+        /* Vitrine Pública (Mobile-First) */
+        .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filters input, .filters select { flex: 1; min-width: 150px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+
+        .car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .car-card { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: flex; flex-direction: column; }
+        
+        /* Carrossel CSS Puro */
+        .car-carousel { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .car-carousel::-webkit-scrollbar { display: none; }
+        .car-carousel img { width: 100%; height: 220px; object-fit: cover; scroll-snap-align: center; flex: 0 0 100%; }
+
+        .car-info { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+        .car-title { font-size: 1.2rem; margin-bottom: 5px; line-height: 1.2; }
+        .car-price { font-size: 1.5rem; font-weight: bold; color: var(--primary); margin: 10px 0; }
+        .car-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tag { background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #555; }
+        .car-desc { font-size: 0.9rem; color: #666; margin-bottom: 15px; flex: 1; }
+
+        /* Tabelas Admin */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: var(--dark); color: #fff; }
+        
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+        .badge-active { background: #d4edda; color: #155724; }
+        .badge-sold { background: #f8d7da; color: #721c24; }
+    </style>
 </head>
-<body class="bg-blue-50 text-gray-800">
-    <div id="layoutContainer" class="flex flex-col lg:flex-row min-h-screen">
-    <!-- Sidebar -->
-    <aside class="lg:block w-full lg:w-72 bg-blue-800 text-white p-6 flex flex-col shadow-lg">
-      <h1 class="text-3xl font-bold mb-4">WA CRM</h1>
-      <p class="text-sm opacity-80">Total de Serviços</p>
-      <p id="totalValor" class="text-4xl font-extrabold mb-6">R$ 0,00</p>
+<body>
 
+    <header>
+        <h1 id="brandName">AutoSaaS <span>Vitrine</span></h1>
+        <div class="nav-btns">
+            <button onclick="navigate('vitrine')">Vitrine Pública</button>
+            <button onclick="navigate('admin')">Painel Lojista</button>
+        </div>
+    </header>
 
-      <button id="addClienteBtn" class="bg-white text-blue-800 px-4 py-3 rounded-xl font-semibold shadow hover:bg-blue-100 transition mb-2">+ Novo Cliente</button>
-      <button id="exportarBtn" class="bg-white text-blue-800 px-4 py-3 rounded-xl font-semibold shadow hover:bg-blue-100 transition mb-2">⬇️ Exportar</button>
-      <label for="importarInput">
-        <div class="bg-white text-blue-800 px-4 py-3 rounded-xl font-semibold shadow text-center cursor-pointer hover:bg-blue-100 transition">
-          ⬆️ Importar
+    <main id="view-vitrine" class="view active">
+        <h2 class="section-title">Nosso Estoque</h2>
+        
+        <div class="filters">
+            <input type="text" id="searchFilter" placeholder="Buscar modelo ou marca..." onkeyup="renderVitrine()">
+            <select id="priceFilter" onchange="renderVitrine()">
+                <option value="all">Qualquer Preço</option>
+                <option value="50000">Até R$ 50.000</option>
+                <option value="100000">Até R$ 100.000</option>
+                <option value="999999">Acima de R$ 100.000</option>
+            </select>
         </div>
-        <input type="file" id="importarInput" accept=".json" class="hidden" />
-      </label>
-    </aside>
 
-    <!-- Conteúdo principal -->
-    <main class="flex-1 p-4 sm:p-6 overflow-x-hidden">
-      <!-- Dashboard Resumo -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white border-l-4 border-blue-500 p-4 rounded-lg shadow">
-          <h3 class="text-sm text-gray-500">Total Realizando</h3>
-          <p id="totalRealizando" class="text-2xl font-bold text-blue-700">0</p>
-        </div>
-        <div class="bg-white border-l-4 border-green-500 p-4 rounded-lg shadow">
-          <h3 class="text-sm text-gray-500">Total Entregue</h3>
-          <p id="totalEntregue" class="text-2xl font-bold text-green-700">0</p>
-        </div>
-        <div class="bg-white border-l-4 border-gray-500 p-4 rounded-lg shadow">
-          <h3 class="text-sm text-gray-500">Total de Clientes</h3>
-          <p id="totalClientes" class="text-2xl font-bold text-gray-800">0</p>
-        </div>
-      </div>
-
-      <!-- Barra de ações -->
-      <div class="flex flex-wrap justify-between items-center gap-3 mb-6">
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <input type="text" id="buscarCliente" placeholder="🔍 Buscar clientes..." class="p-2 pl-10 border rounded-lg w-full sm:w-64 bg-white shadow-sm focus:ring-2 focus:ring-blue-300" />
-        </div>
-        <div class="flex flex-wrap gap-2">
-        </div>
-      </div>
-
-            <!-- Lista de filtros e botões -->
-      <div class="flex flex-col md:flex-row md:items-center md:gap-4 gap-3 mb-6">
-     
-        <select id="filtroStatus" class="p-3 border rounded-lg w-full md:w-auto">
-          <option value="">Situação</option>
-          <option value="realizando">Realizando</option>
-          <option value="entregue">Entregue</option>
-        </select>
-        <select id="filtroServico" class="p-3 border rounded-lg w-full md:w-auto">
-          <option value="">Serviço</option>
-          <option value="logotipo">Logotipo</option>
-          <option value="site">Site</option>
-          <option value="anuncio">Anúncio</option>
-        </select>
-        <select id="filtroPrioridade" class="p-3 border rounded-lg w-full md:w-auto">
-          <option value="">Prioridade</option>
-          <option value="baixa">Baixa</option>
-          <option value="média">Média</option>
-          <option value="alta">Alta</option>
-        </select>
-      </div>
-
-      <!-- Cards -->
-      <div id="listaClientes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        <div id="publicCarGrid" class="car-grid">
+            </div>
     </main>
-  </div>
 
-  <!-- Modal -->
-  <div id="modalCliente" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-2xl">
-      <h2 class="text-2xl font-bold mb-6 text-blue-800">Adicionar / Editar Cliente</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input id="nomeCliente" class="border p-3 rounded-lg w-full" type="text" placeholder="Nome">
-        <input id="empresaCliente" class="border p-3 rounded-lg w-full" type="text" placeholder="Empresa">
-        <input id="contatoCliente" class="border p-3 rounded-lg w-full" type="text" placeholder="WhatsApp ou Email">
-        <input id="valorCliente" class="border p-3 rounded-lg w-full" type="number" placeholder="Valor R$">
+    <main id="view-admin" class="view">
+        <h2 class="section-title">Dashboard & Estoque</h2>
+        
+        <div class="dashboard-grid">
+            <div class="dash-card">
+                <h3>Total de Leads (Mês)</h3>
+                <p id="totalLeadsCount">0</p>
+            </div>
+            <div class="dash-card">
+                <h3>Carros Ativos</h3>
+                <p id="activeCarsCount">0</p>
+            </div>
+        </div>
 
-        <select id="tipoServico" class="border p-3 rounded-lg w-full">
-          <option value="">Tipo de Serviço</option>
-          <option value="logotipo">Logotipo</option>
-          <option value="site">Site</option>
-          <option value="anuncio">Anúncio</option>
-        </select>
-        <select id="prioridadeCliente" class="border p-3 rounded-lg w-full">
-          <option value="baixa">Baixa</option>
-          <option value="média">Média</option>
-          <option value="alta">Alta</option>
-        </select>
-        <select id="statusCliente" class="border p-3 rounded-lg w-full">
-          <option value="realizando">Realizando</option>
-          <option value="entregue">Entregue</option>
-        </select>
-        <input id="dataCriacao" class="border p-3 rounded-lg w-full" type="date">
-        <textarea id="obsCliente" class="border p-3 rounded-lg w-full md:col-span-2" placeholder="Observações"></textarea>
-      </div>
-      <div class="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-        <button id="cancelarBtn" class="bg-gray-400 text-white px-6 py-2 rounded-lg hover:bg-gray-500">Cancelar</button>
-        <button id="salvarClienteBtn" class="bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-800">Salvar</button>
-      </div>
-    </div>
-  </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn btn-primary" style="width: auto;" onclick="document.getElementById('formAddCar').style.display='block'">+ Adicionar Novo Carro</button>
+            <button class="btn" style="width: auto; background: var(--dark); color: white;" onclick="navigate('config')">Configurar Loja</button>
+        </div>
 
-  <script type="module" src="script.js"></script>
-  
+        <div id="formAddCar" style="display: none; background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #ccc;">
+            <h3>Cadastrar Novo Veículo</h3>
+            <br>
+            <form id="carForm" onsubmit="salvarCarro(event)">
+                <div class="form-group">
+                    <label>Nome do Modelo (Ex: Fiat Uno Way 1.0)</label>
+                    <input type="text" id="c_nome" class="form-control" required>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Ano</label>
+                        <input type="number" id="c_ano" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Preço (R$)</label>
+                        <input type="number" id="c_preco" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quilometragem</label>
+                        <input type="number" id="c_km" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cor</label>
+                        <input type="text" id="c_cor" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Combustível</label>
+                        <select id="c_combustivel" class="form-control">
+                            <option value="Flex">Flex</option>
+                            <option value="Gasolina">Gasolina</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="Elétrico">Elétrico</option>
+                            <option value="Híbrido">Híbrido</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Câmbio</label>
+                        <select id="c_cambio" class="form-control">
+                            <option value="Automático">Automático</option>
+                            <option value="Manual">Manual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Descrição Curta (Destaques)</label>
+                    <textarea id="c_desc" class="form-control" maxlength="300" placeholder="Único dono, revisões na concessionária..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URLs das Fotos (Cole os links separados por vírgula para simular o carrossel)</label>
+                    <textarea id="c_fotos" class="form-control" required placeholder="https://link-foto1.jpg, https://link-foto2.jpg"></textarea>
+                    <small>No MVP GitHub, usamos links. No Firebase faremos upload de arquivo.</small>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-success">Salvar Veículo</button>
+                    <button type="button" class="btn" style="background: #ccc;" onclick="document.getElementById('formAddCar').style.display='none'">Cancelar</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Veículo</th>
+                        <th>Preço</th>
+                        <th>Leads Gerados</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="adminCarTable">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <main id="view-config" class="view">
+        <div style="max-width: 500px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <h2 class="section-title">Configurações da Loja</h2>
+            <form onsubmit="salvarConfig(event)">
+                <div class="form-group">
+                    <label>Nome da Loja</label>
+                    <input type="text" id="conf_nome" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>WhatsApp de Vendas (Apenas números + DDD)</label>
+                    <input type="text" id="conf_whats" class="form-control" placeholder="Ex: 11999999999" required>
+                    <small style="color: red; font-weight: bold;">(Crucial: É aqui que os leads vão cair!)</small>
+                </div>
+                <div class="form-group">
+                    <label>Plano</label>
+                    <select id="conf_plano" class="form-control">
+                        <option value="Básico">Plano Básico (R$ 97/mês)</option>
+                        <option value="Pro">Plano Pro (R$ 197/mês)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Salvar Configurações</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. BANCO DE DADOS SIMULADO (Local Storage) ---
+        let appData = JSON.parse(localStorage.getItem('autoSaaSData')) || {
+            config: {
+                nomeLoja: "Minha Loja de Carros",
+                whatsapp: "5511900000000",
+                plano: "Básico"
+            },
+            carros: [],
+            totalLeads: 0
+        };
+
+        // Salva os dados no navegador
+        function saveData() {
+            localStorage.setItem('autoSaaSData', JSON.stringify(appData));
+            atualizarInterface();
+        }
+
+        // --- 2. NAVEGAÇÃO SPA ---
+        function navigate(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            if(viewId === 'config') preencherFormConfig();
+        }
+
+        // --- 3. GESTÃO DE CONFIGURAÇÕES (LOJISTA) ---
+        function preencherFormConfig() {
+            document.getElementById('conf_nome').value = appData.config.nomeLoja;
+            document.getElementById('conf_whats').value = appData.config.whatsapp;
+            document.getElementById('conf_plano').value = appData.config.plano;
+        }
+
+        function salvarConfig(e) {
+            e.preventDefault();
+            appData.config.nomeLoja = document.getElementById('conf_nome').value;
+            appData.config.whatsapp = document.getElementById('conf_whats').value;
+            appData.config.plano = document.getElementById('conf_plano').value;
+            saveData();
+            alert('Configurações salvas! Agora a vitrine tem o nome da sua loja.');
+            navigate('admin');
+        }
+
+        // --- 4. GESTÃO DE ESTOQUE (CRUD) ---
+        function salvarCarro(e) {
+            e.preventDefault();
+            
+            // Separa as URLs das fotos por vírgula e limpa os espaços
+            const fotosRaw = document.getElementById('c_fotos').value.split(',');
+            const fotosArray = fotosRaw.map(url => url.trim()).filter(url => url !== "");
+
+            const novoCarro = {
+                id: Date.now(), // Gera um ID único
+                nome: document.getElementById('c_nome').value,
+                ano: document.getElementById('c_ano').value,
+                preco: Number(document.getElementById('c_preco').value),
+                km: document.getElementById('c_km').value,
+                cor: document.getElementById('c_cor').value,
+                combustivel: document.getElementById('c_combustivel').value,
+                cambio: document.getElementById('c_cambio').value,
+                desc: document.getElementById('c_desc').value,
+                fotos: fotosArray.length > 0 ? fotosArray : ["https://via.placeholder.com/600x400?text=Sem+Foto"],
+                status: 'ativo', // ativo ou vendido
+                leads: 0
+            };
+
+            appData.carros.push(novoCarro);
+            saveData();
+            document.getElementById('carForm').reset();
+            document.getElementById('formAddCar').style.display = 'none';
+        }
+
+        function removerCarro(id) {
+            if(confirm("Tem certeza que deseja apagar este veículo?")) {
+                appData.carros = appData.carros.filter(c => c.id !== id);
+                saveData();
+            }
+        }
+
+        function marcarVendido(id) {
+            const carro = appData.carros.find(c => c.id === id);
+            if(carro) {
+                carro.status = carro.status === 'ativo' ? 'vendido' : 'ativo';
+                saveData();
+            }
+        }
+
+        // --- 5. O MOTOR DE LEADS (Se não gera lead, não serve) ---
+        function gerarLead(carroId) {
+            const carro = appData.carros.find(c => c.id === carroId);
+            if(!carro) return;
+
+            // Incrementa os contadores
+            carro.leads += 1;
+            appData.totalLeads += 1;
+            saveData();
+
+            // Formata o preço em Reais
+            const precoFormatado = carro.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            // Monta a mensagem magnética
+            const msg = `Olá! Vi o ${carro.nome} (${carro.ano}) por ${precoFormatado} na vitrine da ${appData.config.nomeLoja}. Podemos conversar?`;
+            const urlWhats = `https://wa.me/${appData.config.whatsapp}?text=${encodeURIComponent(msg)}`;
+            
+            // Abre o WhatsApp numa nova aba
+            window.open(urlWhats, '_blank');
+        }
+
+        // --- 6. RENDERIZAÇÃO DA INTERFACE ---
+        function atualizarInterface() {
+            document.getElementById('brandName').innerHTML = `${appData.config.nomeLoja} <span>Vitrine</span>`;
+            
+            // Atualiza Dashboard
+            document.getElementById('totalLeadsCount').innerText = appData.totalLeads;
+            const ativos = appData.carros.filter(c => c.status === 'ativo').length;
+            document.getElementById('activeCarsCount').innerText = ativos;
+
+            renderAdminTable();
+            renderVitrine();
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminCarTable');
+            tbody.innerHTML = '';
+
+            // Ordena para mostrar os com mais leads no topo
+            const carrosOrdenados = [...appData.carros].sort((a, b) => b.leads - a.leads);
+
+            carrosOrdenados.forEach(carro => {
+                const tr = document.createElement('tr');
+                const badgeClass = carro.status === 'ativo' ? 'badge-active' : 'badge-sold';
+                const statusText = carro.status === 'ativo' ? 'Em Estoque' : 'Vendido';
+                const precoFmt = carro.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                tr.innerHTML = `
+                    <td><strong>${carro.nome}</strong><br><small>${carro.ano}</small></td>
+                    <td>${precoFmt}</td>
+                    <td><strong style="color:var(--primary); font-size:1.2rem;">${carro.leads}</strong> cliques</td>
+                    <td><span class="badge ${badgeClass}">${statusText}</span></td>
+                    <td>
+                        <button class="btn btn-danger" onclick="marcarVendido(${carro.id})">${carro.status === 'ativo' ? 'Marcar Vendido' : 'Reativar'}</button>
+                        <button class="btn btn-danger" style="background:#333;" onclick="removerCarro(${carro.id})">Excluir</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderVitrine() {
+            const grid = document.getElementById('publicCarGrid');
+            grid.innerHTML = '';
+
+            // Lógica de Filtros
+            const termoBusca = document.getElementById('searchFilter').value.toLowerCase();
+            const precoMax = document.getElementById('priceFilter').value;
+
+            // Pega apenas carros ativos
+            let carrosVisiveis = appData.carros.filter(c => c.status === 'ativo');
+
+            // Aplica Busca
+            if(termoBusca) {
+                carrosVisiveis = carrosVisiveis.filter(c => c.nome.toLowerCase().includes(termoBusca));
+            }
+
+            // Aplica Preço
+            if(precoMax !== 'all') {
+                carrosVisiveis = carrosVisiveis.filter(c => c.preco <= Number(precoMax));
+            }
+
+            if(carrosVisiveis.length === 0) {
+                grid.innerHTML = '<p style="grid-column: 1/-1; text-align:center; color:#666;">Nenhum veículo encontrado com estes filtros.</p>';
+                return;
+            }
+
+            carrosVisiveis.forEach(carro => {
+                // Monta o HTML do carrossel de fotos do carro
+                let fotosHtml = '';
+                carro.fotos.forEach(foto => {
+                    fotosHtml += `<img src="${foto}" alt="${carro.nome}">`;
+                });
+
+                const precoFmt = carro.preco.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+                const card = document.createElement('div');
+                card.className = 'car-card';
+                card.innerHTML = `
+                    <div class="car-carousel">
+                        ${fotosHtml}
+                    </div>
+                    <div class="car-info">
+                        <h3 class="car-title">${carro.nome}</h3>
+                        <p class="car-price">${precoFmt}</p>
+                        <div class="car-tags">
+                            <span class="tag">${carro.ano}</span>
+                            <span class="tag">${carro.km} km</span>
+                            <span class="tag">${carro.cambio}</span>
+                        </div>
+                        <p class="car-desc">${carro.desc || 'Veículo em excelente estado.'}</p>
+                        <button class="btn btn-success" onclick="gerarLead(${carro.id})">📲 Falar no WhatsApp</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // --- INICIALIZAÇÃO ---
+        // Adiciona um carro de exemplo caso o banco esteja vazio na primeira vez
+        if(appData.carros.length === 0) {
+            appData.carros.push({
+                id: 1, nome: "Jeep Renegade Sport 1.8", ano: 2021, preco: 85900, km: 45000,
+                cor: "Branco", combustivel: "Flex", cambio: "Automático",
+                desc: "Único dono, revisado na concessionária. Aceito troca.",
+                fotos: ["https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=800&q=80"],
+                status: 'ativo', leads: 0
+            });
+            saveData();
+        } else {
+            atualizarInterface();
+        }
+
+    </script>
 </body>
 </html>
