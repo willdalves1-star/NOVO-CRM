@@ -38,9 +38,7 @@
         header span { color: #ffd700; }
         
         /* Menu Hambúrguer Suspenso */
-        .nav-container {
-            position: relative;
-        }
+        .nav-container { position: relative; }
 
         .hamburger-btn {
             background: transparent;
@@ -56,10 +54,7 @@
             justify-content: center;
         }
 
-        .hamburger-btn:hover {
-            background: #ffd700; 
-            color: #000;
-        }
+        .hamburger-btn:hover { background: #ffd700; color: #000; }
 
         .nav-menu {
             display: none;
@@ -78,9 +73,7 @@
             z-index: 200;
         }
 
-        .nav-menu.show {
-            display: flex;
-        }
+        .nav-menu.show { display: flex; }
 
         .nav-menu button {
             background: transparent;
@@ -96,10 +89,7 @@
             font-family: 'Montserrat', sans-serif;
         }
 
-        .nav-menu button:hover { 
-            background: #ffd700; 
-            color: #000; 
-        }
+        .nav-menu button:hover { background: #ffd700; color: #000; }
 
         /* Divisor Premium Ouro */
         .divider {
@@ -141,9 +131,7 @@
         }
         .filters input:focus, .filters select:focus { outline: none; border-color: #ffd700; }
 
-        .car-grid {
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 40px;
-        }
+        .car-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; }
 
         .product {
             background: #1a1a1a;
@@ -196,7 +184,7 @@
         .dash-card p { font-size: 3rem; font-weight: bold; color: #ffd700; font-family: 'Playfair Display', serif;}
 
         /* Formulários Premium */
-        .admin-form-container { background: #1a1a1a; padding: 30px; border-radius: 12px; border: 1px solid #333; margin-bottom: 30px; }
+        .admin-form-container { background: #1a1a1a; padding: 30px; border-radius: 12px; border: 1px solid #333; margin-bottom: 30px; transition: all 0.3s ease;}
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #ccc; font-size: 0.9rem; }
         .form-control { 
@@ -215,6 +203,8 @@
         .btn-secondary { background: #333; color: #fff; }
         .btn-secondary:hover { background: #444; }
         .btn-danger { background: #8a1c1c; color: #fff; padding: 8px 15px; font-size: 0.85rem; border-radius: 4px; }
+        .btn-edit { background: #0a58ca; color: #fff; padding: 8px 15px; font-size: 0.85rem; border-radius: 4px; }
+        .btn-edit:hover { background: #084298; }
 
         /* Upload de Imagens Personalizado */
         .file-upload-input { display: none; }
@@ -291,12 +281,12 @@
         </div>
 
         <div style="display: flex; gap: 15px; margin-bottom: 30px; justify-content: center; flex-wrap: wrap;">
-            <button class="btn-admin btn-primary" onclick="document.getElementById('formAddCar').style.display='block'">+ Cadastrar Veículo</button>
+            <button class="btn-admin btn-primary" onclick="abrirFormNovoCadastro()">+ Cadastrar Veículo</button>
             <button class="btn-admin btn-secondary" onclick="navigate('config')" style="border: 1px solid #ffd700;">✏️ Editar Nome no Topo e Contato</button>
         </div>
 
         <div id="formAddCar" class="admin-form-container" style="display: none;">
-            <h3 style="color: #ffd700; margin-bottom: 20px; font-family: 'Playfair Display', serif; font-size: 1.5rem;">Novo Cadastro</h3>
+            <h3 id="formTitle" style="color: #ffd700; margin-bottom: 20px; font-family: 'Playfair Display', serif; font-size: 1.5rem;">Novo Cadastro</h3>
             <form id="carForm" onsubmit="salvarCarro(event)">
                 <div class="form-group">
                     <label>Modelo do Veículo</label>
@@ -332,12 +322,12 @@
                         <label for="c_fotos_upload" class="file-upload-btn">📸 Clique para Escolher Imagens</label>
                     </div>
                     <div id="image-preview-container"></div>
-                    <small style="color: #aaa; margin-top: 5px; display: block;">As fotos serão redimensionadas automaticamente para a proporção perfeita.</small>
+                    <small style="color: #aaa; margin-top: 5px; display: block;">Ao editar, carregar novas fotos substituirá as antigas.</small>
                 </div>
 
                 <div style="display: flex; gap: 15px;">
-                    <button type="submit" class="btn-admin btn-primary">Salvar no Acervo</button>
-                    <button type="button" class="btn-admin btn-secondary" onclick="document.getElementById('formAddCar').style.display='none'">Cancelar</button>
+                    <button type="submit" id="btnSubmitCar" class="btn-admin btn-primary">Salvar no Acervo</button>
+                    <button type="button" class="btn-admin btn-secondary" onclick="cancelarEdicao()">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -348,7 +338,7 @@
                     <tr>
                         <th>Veículo</th>
                         <th>Valor</th>
-                        <th>Interessados (Leads)</th>
+                        <th>Interessados</th>
                         <th>Status</th>
                         <th>Gestão</th>
                     </tr>
@@ -393,7 +383,6 @@
             document.getElementById('navMenu').classList.toggle('show');
         }
 
-        // Fecha o menu ao clicar fora dele
         window.onclick = function(event) {
             if (!event.target.matches('.hamburger-btn')) {
                 var menu = document.getElementById("navMenu");
@@ -404,14 +393,15 @@
         }
         // ----------------------------------
 
-        // --- SISTEMA DE UPLOAD BASE64 (Múltiplas Fotos) ---
+        // --- SISTEMA DE UPLOAD BASE64 ---
         let fotosTemporarias = [];
+        let carroEmEdicaoId = null; // Variável global para rastrear se estamos editando um carro
 
         function processarImagens(event) {
             const files = event.target.files;
             const previewContainer = document.getElementById('image-preview-container');
-            previewContainer.innerHTML = ''; // Limpa anteriores
-            fotosTemporarias = []; // Reseta o array
+            previewContainer.innerHTML = ''; 
+            fotosTemporarias = []; 
 
             if(files.length === 0) return;
 
@@ -423,7 +413,6 @@
                     const base64Str = e.target.result;
                     fotosTemporarias.push(base64Str);
 
-                    // Cria a miniatura
                     const img = document.createElement('img');
                     img.src = base64Str;
                     img.className = 'preview-img';
@@ -432,6 +421,67 @@
                 reader.readAsDataURL(file);
             }
         }
+        
+        // --- FUNÇÕES DE EDIÇÃO DE CARROS ---
+        function abrirFormNovoCadastro() {
+            cancelarEdicao(); // Limpa estado de edição antes de abrir
+            document.getElementById('formAddCar').style.display = 'block';
+        }
+
+        function editarCarro(id) {
+            const carro = appData.carros.find(c => c.id === id);
+            if(!carro) return;
+
+            carroEmEdicaoId = id; // Define que estamos em modo edição
+
+            // Preenche os inputs com os dados do carro selecionado
+            document.getElementById('c_nome').value = carro.nome;
+            document.getElementById('c_ano').value = carro.ano;
+            document.getElementById('c_preco').value = carro.preco;
+            document.getElementById('c_km').value = carro.km;
+            document.getElementById('c_cor').value = carro.cor || "";
+            document.getElementById('c_desc').value = carro.desc || "";
+
+            // Carrega as fotos existentes
+            fotosTemporarias = [...carro.fotos];
+            
+            // Renderiza as miniaturas atuais
+            const previewContainer = document.getElementById('image-preview-container');
+            previewContainer.innerHTML = '';
+            
+            // Previne mostrar a imagem de placeholder no preview
+            if (!fotosTemporarias[0].includes('via.placeholder.com')) {
+                fotosTemporarias.forEach(fotoUrl => {
+                    const img = document.createElement('img');
+                    img.src = fotoUrl;
+                    img.className = 'preview-img';
+                    previewContainer.appendChild(img);
+                });
+            } else {
+                fotosTemporarias = []; // Se for só placeholder, zera a lista temporária
+            }
+
+            // Altera visual do formulário para "Edição"
+            document.getElementById('formTitle').innerText = "Editar Veículo";
+            document.getElementById('btnSubmitCar').innerText = "Salvar Alterações";
+            
+            // Mostra o formulário e rola a tela até ele
+            document.getElementById('formAddCar').style.display = 'block';
+            document.getElementById('formAddCar').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelarEdicao() {
+            document.getElementById('carForm').reset();
+            document.getElementById('image-preview-container').innerHTML = '';
+            fotosTemporarias = [];
+            carroEmEdicaoId = null; // Remove estado de edição
+
+            // Volta visual do form para "Criação"
+            document.getElementById('formTitle').innerText = "Novo Cadastro";
+            document.getElementById('btnSubmitCar').innerText = "Salvar no Acervo";
+            document.getElementById('formAddCar').style.display = 'none';
+        }
+
         // ----------------------------------------------------
 
         function saveData() {
@@ -440,11 +490,8 @@
         }
 
         function navigate(viewId) {
-            // Oculta todas as telas e exibe a selecionada
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
-            
-            // Fecha o menu hambúrguer após a escolha
             document.getElementById('navMenu').classList.remove('show');
 
             if(viewId === 'config') preencherFormConfig();
@@ -473,30 +520,40 @@
                 ? [...fotosTemporarias] 
                 : ["https://via.placeholder.com/600x400/1a1a1a/ffd700?text=Sem+Foto"];
 
-            const novoCarro = {
-                id: Date.now(),
-                nome: document.getElementById('c_nome').value,
-                ano: document.getElementById('c_ano').value,
-                preco: Number(document.getElementById('c_preco').value),
-                km: document.getElementById('c_km').value,
-                cor: document.getElementById('c_cor').value,
-                desc: document.getElementById('c_desc').value,
-                fotos: fotosArray, 
-                status: 'ativo', leads: 0
-            };
+            if (carroEmEdicaoId) {
+                // LÓGICA DE ATUALIZAÇÃO (EDITAR)
+                const index = appData.carros.findIndex(c => c.id === carroEmEdicaoId);
+                if (index !== -1) {
+                    appData.carros[index].nome = document.getElementById('c_nome').value;
+                    appData.carros[index].ano = document.getElementById('c_ano').value;
+                    appData.carros[index].preco = Number(document.getElementById('c_preco').value);
+                    appData.carros[index].km = document.getElementById('c_km').value;
+                    appData.carros[index].cor = document.getElementById('c_cor').value;
+                    appData.carros[index].desc = document.getElementById('c_desc').value;
+                    appData.carros[index].fotos = fotosArray;
+                }
+            } else {
+                // LÓGICA DE CRIAÇÃO (NOVO CARRO)
+                const novoCarro = {
+                    id: Date.now(),
+                    nome: document.getElementById('c_nome').value,
+                    ano: document.getElementById('c_ano').value,
+                    preco: Number(document.getElementById('c_preco').value),
+                    km: document.getElementById('c_km').value,
+                    cor: document.getElementById('c_cor').value,
+                    desc: document.getElementById('c_desc').value,
+                    fotos: fotosArray, 
+                    status: 'ativo', leads: 0
+                };
+                appData.carros.push(novoCarro);
+            }
 
-            appData.carros.push(novoCarro);
             saveData();
-            
-            document.getElementById('carForm').reset();
-            document.getElementById('image-preview-container').innerHTML = '';
-            fotosTemporarias = [];
-            
-            document.getElementById('formAddCar').style.display = 'none';
+            cancelarEdicao(); // Limpa e fecha o painel
         }
 
         function removerCarro(id) {
-            if(confirm("Remover este veículo do acervo?")) {
+            if(confirm("Remover este veículo do acervo de forma permanente?")) {
                 appData.carros = appData.carros.filter(c => c.id !== id);
                 saveData();
             }
@@ -545,8 +602,11 @@
                     <td><strong style="color:#fff; font-size:1.1rem;">${carro.leads}</strong> cliques</td>
                     <td><span class="badge ${badgeClass}">${statusText}</span></td>
                     <td>
-                        <button class="btn-admin btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" onclick="marcarVendido(${carro.id})">Alt. Status</button>
-                        <button class="btn-admin btn-danger" onclick="removerCarro(${carro.id})">Excluir</button>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button class="btn-admin btn-secondary" style="padding: 6px 10px; font-size: 0.8rem;" onclick="marcarVendido(${carro.id})">Alt. Status</button>
+                            <button class="btn-admin btn-edit" onclick="editarCarro(${carro.id})">Editar</button>
+                            <button class="btn-admin btn-danger" onclick="removerCarro(${carro.id})">Excluir</button>
+                        </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
