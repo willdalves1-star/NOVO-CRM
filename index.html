@@ -37,18 +37,69 @@
         header h1 { font-size: 1.5rem; color: #fff; }
         header span { color: #ffd700; }
         
-        .nav-btns button {
+        /* Menu Hambúrguer Suspenso */
+        .nav-container {
+            position: relative;
+        }
+
+        .hamburger-btn {
             background: transparent;
             color: #ffd700;
             border: 1px solid #ffd700;
-            padding: 8px 16px;
+            padding: 4px 12px;
             border-radius: 4px;
             cursor: pointer;
-            margin-left: 10px;
+            font-size: 1.8rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hamburger-btn:hover {
+            background: #ffd700; 
+            color: #000;
+        }
+
+        .nav-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            flex-direction: column;
+            gap: 10px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.9);
+            margin-top: 15px;
+            min-width: 160px;
+            z-index: 200;
+        }
+
+        .nav-menu.show {
+            display: flex;
+        }
+
+        .nav-menu button {
+            background: transparent;
+            color: #ffd700;
+            border: 1px solid #ffd700;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif;
         }
-        .nav-btns button:hover { background: #ffd700; color: #000; }
+
+        .nav-menu button:hover { 
+            background: #ffd700; 
+            color: #000; 
+        }
 
         /* Divisor Premium Ouro */
         .divider {
@@ -197,9 +248,13 @@
 
     <header>
         <h1 id="brandName">AutoPremium <span>SaaS</span></h1>
-        <div class="nav-btns">
-            <button onclick="navigate('vitrine')">Ver Vitrine</button>
-            <button onclick="navigate('admin')">Painel Gestão</button>
+        
+        <div class="nav-container">
+            <button class="hamburger-btn" onclick="toggleMenu()" title="Abrir Menu">☰</button>
+            <div class="nav-menu" id="navMenu">
+                <button onclick="navigate('vitrine')">Ver Vitrine</button>
+                <button onclick="navigate('admin')">Painel Gestão</button>
+            </div>
         </div>
     </header>
     <div class="divider"></div>
@@ -327,11 +382,27 @@
     </main>
 
     <script>
-        // Dados do App atualizados para suportar o sufixo dourado
+        // Dados do App
         let appData = JSON.parse(localStorage.getItem('autoPremiumData')) || {
             config: { nomeLoja: "Motors Premium", sufixoLoja: "SaaS", whatsapp: "5511900000000" },
             carros: [], totalLeads: 0
         };
+
+        // --- SISTEMA DE MENU HAMBÚRGUER ---
+        function toggleMenu() {
+            document.getElementById('navMenu').classList.toggle('show');
+        }
+
+        // Fecha o menu ao clicar fora dele
+        window.onclick = function(event) {
+            if (!event.target.matches('.hamburger-btn')) {
+                var menu = document.getElementById("navMenu");
+                if (menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            }
+        }
+        // ----------------------------------
 
         // --- SISTEMA DE UPLOAD BASE64 (Múltiplas Fotos) ---
         let fotosTemporarias = [];
@@ -369,8 +440,13 @@
         }
 
         function navigate(viewId) {
+            // Oculta todas as telas e exibe a selecionada
             document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
             document.getElementById(`view-${viewId}`).classList.add('active');
+            
+            // Fecha o menu hambúrguer após a escolha
+            document.getElementById('navMenu').classList.remove('show');
+
             if(viewId === 'config') preencherFormConfig();
             window.scrollTo(0, 0);
         }
@@ -393,7 +469,6 @@
         function salvarCarro(e) {
             e.preventDefault();
 
-            // Pega as fotos do array temporário, se vazio, usa uma imagem padrão
             const fotosArray = fotosTemporarias.length > 0 
                 ? [...fotosTemporarias] 
                 : ["https://via.placeholder.com/600x400/1a1a1a/ffd700?text=Sem+Foto"];
@@ -406,14 +481,13 @@
                 km: document.getElementById('c_km').value,
                 cor: document.getElementById('c_cor').value,
                 desc: document.getElementById('c_desc').value,
-                fotos: fotosArray, // Salva as imagens Base64
+                fotos: fotosArray, 
                 status: 'ativo', leads: 0
             };
 
             appData.carros.push(novoCarro);
             saveData();
             
-            // Limpa o form e o container de imagens
             document.getElementById('carForm').reset();
             document.getElementById('image-preview-container').innerHTML = '';
             fotosTemporarias = [];
@@ -443,7 +517,6 @@
         }
 
         function atualizarInterface() {
-            // Atualiza o Nome no Header com as duas cores
             const nomeStr = appData.config.nomeLoja || "AutoPremium";
             const sufixoStr = appData.config.sufixoLoja ? `<span>${appData.config.sufixoLoja}</span>` : "";
             document.getElementById('brandName').innerHTML = `${nomeStr} ${sufixoStr}`;
@@ -520,7 +593,6 @@
             });
         }
 
-        // Adiciona dados de teste apenas se a lista estiver completamente vazia (primeiro uso)
         if(appData.carros.length === 0) {
             appData.carros.push({
                 id: 1, nome: "Land Rover Evoque HSE", ano: 2022, preco: 345000, km: 22000, cor: "Preto",
