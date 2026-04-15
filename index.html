@@ -206,7 +206,7 @@
         .btn-edit { background: #0a58ca; color: #fff; padding: 8px 15px; font-size: 0.85rem; border-radius: 4px; }
         .btn-edit:hover { background: #084298; }
 
-        /* Upload de Imagens Personalizado */
+        /* NOVO: CSS do Upload e Gerenciamento de Imagens */
         .file-upload-input { display: none; }
         .file-upload-btn {
             display: block; background: #0f0f0f; color: #ffd700;
@@ -215,13 +215,30 @@
             transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
         }
         .file-upload-btn:hover { background: rgba(255, 215, 0, 0.1); transform: scale(1.02); }
+        
         #image-preview-container {
-            display: flex; gap: 10px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px;
+            display: flex; gap: 15px; margin-top: 15px; overflow-x: auto; padding-bottom: 10px;
         }
+        
+        .preview-wrapper {
+            position: relative; display: inline-block; flex-shrink: 0;
+        }
+        
         .preview-img {
             width: 80px; height: 80px; object-fit: cover;
-            border-radius: 6px; border: 2px solid #444; flex-shrink: 0;
+            border-radius: 6px; border: 2px solid #444; display: block;
         }
+
+        .remove-photo-btn {
+            position: absolute; top: -8px; right: -8px;
+            background: #dc3545; color: white; border: none;
+            border-radius: 50%; width: 22px; height: 22px;
+            font-size: 14px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5); transition: background 0.2s;
+            line-height: 1; padding-bottom: 2px;
+        }
+        .remove-photo-btn:hover { background: #c82333; }
 
         /* Tabelas Dark */
         .table-responsive { overflow-x: auto; background: #1a1a1a; border-radius: 12px; border: 1px solid #333; padding: 20px;}
@@ -318,11 +335,11 @@
                 <div class="form-group">
                     <label>Fotos do Veículo (Selecione múltiplas imagens)</label>
                     <div>
-                        <input type="file" id="c_fotos_upload" accept="image/*" multiple class="file-upload-input" onchange="processarImagens(event)">
-                        <label for="c_fotos_upload" class="file-upload-btn">📸 Clique para Escolher Imagens</label>
+                        <input type="file" id="c_fotos_upload" accept="image/*" multiple class="file-upload-input" onchange="processarImagens(event)" onclick="this.value=null;">
+                        <label for="c_fotos_upload" class="file-upload-btn">📸 Clique para Adicionar Imagens</label>
                     </div>
                     <div id="image-preview-container"></div>
-                    <small style="color: #aaa; margin-top: 5px; display: block;">Ao editar, carregar novas fotos substituirá as antigas.</small>
+                    <small style="color: #aaa; margin-top: 5px; display: block;">Você pode adicionar novas fotos ou remover as existentes clicando no "×" vermelho.</small>
                 </div>
 
                 <div style="display: flex; gap: 15px;">
@@ -393,18 +410,16 @@
         }
         // ----------------------------------
 
-        // --- SISTEMA DE UPLOAD BASE64 ---
+        // --- SISTEMA AVANÇADO DE IMAGENS (UPLOAD E REMOÇÃO) ---
         let fotosTemporarias = [];
-        let carroEmEdicaoId = null; // Variável global para rastrear se estamos editando um carro
+        let carroEmEdicaoId = null; 
 
+        // Lê os arquivos selecionados e ADICIONA ao array existente
         function processarImagens(event) {
             const files = event.target.files;
-            const previewContainer = document.getElementById('image-preview-container');
-            previewContainer.innerHTML = ''; 
-            fotosTemporarias = []; 
-
             if(files.length === 0) return;
 
+            let filesProcessed = 0;
             for(let i = 0; i < files.length; i++) {
                 const file = files[i];
                 const reader = new FileReader();
@@ -412,19 +427,52 @@
                 reader.onload = function(e) {
                     const base64Str = e.target.result;
                     fotosTemporarias.push(base64Str);
-
-                    const img = document.createElement('img');
-                    img.src = base64Str;
-                    img.className = 'preview-img';
-                    previewContainer.appendChild(img);
+                    filesProcessed++;
+                    
+                    // Renderiza as miniaturas apenas quando terminar de ler todas
+                    if(filesProcessed === files.length) {
+                        renderizarMiniaturas();
+                    }
                 };
                 reader.readAsDataURL(file);
             }
         }
+
+        // Remove a foto escolhida pelo índice no array
+        function removerFotoTemporaria(index) {
+            fotosTemporarias.splice(index, 1);
+            renderizarMiniaturas();
+        }
+
+        // Reconstrói a interface das miniaturas sempre que adiciona ou remove fotos
+        function renderizarMiniaturas() {
+            const previewContainer = document.getElementById('image-preview-container');
+            previewContainer.innerHTML = ''; 
+
+            fotosTemporarias.forEach((fotoBase64, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'preview-wrapper';
+
+                const img = document.createElement('img');
+                img.src = fotoBase64;
+                img.className = 'preview-img';
+
+                const btnRemover = document.createElement('button');
+                btnRemover.className = 'remove-photo-btn';
+                btnRemover.innerHTML = '×';
+                btnRemover.type = 'button'; // Previne envio do form
+                btnRemover.onclick = () => removerFotoTemporaria(index);
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(btnRemover);
+                previewContainer.appendChild(wrapper);
+            });
+        }
+        // ----------------------------------------------------
         
-        // --- FUNÇÕES DE EDIÇÃO DE CARROS ---
+        // --- FUNÇÕES DE CONTROLE DE CARROS ---
         function abrirFormNovoCadastro() {
-            cancelarEdicao(); // Limpa estado de edição antes de abrir
+            cancelarEdicao(); 
             document.getElementById('formAddCar').style.display = 'block';
         }
 
@@ -432,9 +480,8 @@
             const carro = appData.carros.find(c => c.id === id);
             if(!carro) return;
 
-            carroEmEdicaoId = id; // Define que estamos em modo edição
+            carroEmEdicaoId = id; 
 
-            // Preenche os inputs com os dados do carro selecionado
             document.getElementById('c_nome').value = carro.nome;
             document.getElementById('c_ano').value = carro.ano;
             document.getElementById('c_preco').value = carro.preco;
@@ -442,30 +489,19 @@
             document.getElementById('c_cor').value = carro.cor || "";
             document.getElementById('c_desc').value = carro.desc || "";
 
-            // Carrega as fotos existentes
-            fotosTemporarias = [...carro.fotos];
-            
-            // Renderiza as miniaturas atuais
-            const previewContainer = document.getElementById('image-preview-container');
-            previewContainer.innerHTML = '';
-            
-            // Previne mostrar a imagem de placeholder no preview
-            if (!fotosTemporarias[0].includes('via.placeholder.com')) {
-                fotosTemporarias.forEach(fotoUrl => {
-                    const img = document.createElement('img');
-                    img.src = fotoUrl;
-                    img.className = 'preview-img';
-                    previewContainer.appendChild(img);
-                });
+            // Carrega as fotos existentes ou limpa se for placeholder
+            if (!carro.fotos[0].includes('via.placeholder.com')) {
+                fotosTemporarias = [...carro.fotos];
             } else {
-                fotosTemporarias = []; // Se for só placeholder, zera a lista temporária
+                fotosTemporarias = [];
             }
+            
+            // Desenha as fotos salvas com o botão de excluir
+            renderizarMiniaturas();
 
-            // Altera visual do formulário para "Edição"
             document.getElementById('formTitle').innerText = "Editar Veículo";
             document.getElementById('btnSubmitCar').innerText = "Salvar Alterações";
             
-            // Mostra o formulário e rola a tela até ele
             document.getElementById('formAddCar').style.display = 'block';
             document.getElementById('formAddCar').scrollIntoView({ behavior: 'smooth' });
         }
@@ -474,15 +510,12 @@
             document.getElementById('carForm').reset();
             document.getElementById('image-preview-container').innerHTML = '';
             fotosTemporarias = [];
-            carroEmEdicaoId = null; // Remove estado de edição
+            carroEmEdicaoId = null; 
 
-            // Volta visual do form para "Criação"
             document.getElementById('formTitle').innerText = "Novo Cadastro";
             document.getElementById('btnSubmitCar').innerText = "Salvar no Acervo";
             document.getElementById('formAddCar').style.display = 'none';
         }
-
-        // ----------------------------------------------------
 
         function saveData() {
             localStorage.setItem('autoPremiumData', JSON.stringify(appData));
@@ -521,7 +554,7 @@
                 : ["https://via.placeholder.com/600x400/1a1a1a/ffd700?text=Sem+Foto"];
 
             if (carroEmEdicaoId) {
-                // LÓGICA DE ATUALIZAÇÃO (EDITAR)
+                // EDITAR
                 const index = appData.carros.findIndex(c => c.id === carroEmEdicaoId);
                 if (index !== -1) {
                     appData.carros[index].nome = document.getElementById('c_nome').value;
@@ -533,7 +566,7 @@
                     appData.carros[index].fotos = fotosArray;
                 }
             } else {
-                // LÓGICA DE CRIAÇÃO (NOVO CARRO)
+                // CRIAR NOVO
                 const novoCarro = {
                     id: Date.now(),
                     nome: document.getElementById('c_nome').value,
@@ -549,7 +582,7 @@
             }
 
             saveData();
-            cancelarEdicao(); // Limpa e fecha o painel
+            cancelarEdicao(); 
         }
 
         function removerCarro(id) {
